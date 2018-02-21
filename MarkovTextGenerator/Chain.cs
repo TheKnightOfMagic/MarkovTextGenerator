@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,7 @@ namespace MarkovTextGenerator
     {
         public Dictionary<String, List<Word>> words;
         private Dictionary<String, int> sums;
+        public List<string> start= new List<string>();
         private Random rand;
 
         public Chain ()
@@ -23,7 +24,8 @@ namespace MarkovTextGenerator
         // a separate list of actual sentence starting words and randomly choose from that
         public String GetRandomStartingWord ()
         {
-            return words.Keys.ElementAt(rand.Next() % words.Keys.Count);
+            return start[rand.Next() % start.Count];
+            
         }
 
         // Adds a sentence to the chain
@@ -40,6 +42,12 @@ namespace MarkovTextGenerator
         {
             // TODO: Break sentence up into word pairs
             // TODO: Add each word pair to the chain
+            sentence += " ";
+            List<string> list = sentence.Split(' ').ToList();
+            for (int i =0; i< list.Count-1; i++)
+            {
+                AddPair(list[i], list[i+1]);
+            }
         }
 
         // Adds a pair of words to the chain that will appear in order
@@ -75,21 +83,45 @@ namespace MarkovTextGenerator
         // Given a word, randomly chooses the next word
         public String GetNextWord (String word)
         {
+            //words[word].Probability
+
+            //http://www.vcskicks.com/random-element.php
             if (words.ContainsKey(word))
             {
-                double choice = 1.0 / (double)rand.Next(100000);
+                double choice = rand.NextDouble();
 
-                Console.WriteLine("I picked the number " + choice); 
+                //Console.WriteLine("I picked the number " + choice);
+                double total = 0;
+
+                foreach (Word s in words[word])
+                {
+                    total += s.Probability;
+
+                    if (choice<total)
+                    {
+                        return s.ToString();
+                    }
+                }
+                Console.WriteLine("Well it failed");
+
             }
 
-            return "idkbbq";
+            return word;
         }
 
         public void UpdateProbabilities ()
         {
+            string upper = "ASDFGHJKLQWERTYUIOPZXCVBNM";
             foreach (String word in words.Keys)
             {
                 double sum = 0;  // Total sum of all the occurences of each followup word
+
+                if (word != "") {
+                    if (upper.Contains(word[0]))
+                    {
+                        start.Add(word);
+                    }
+                }
 
                 // Update the probabilities
                 foreach (Word s in words[word])
